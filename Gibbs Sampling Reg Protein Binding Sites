@@ -1,0 +1,222 @@
+
+k <- 15-1
+a <- toupper("atgaccgggatactgatAgAAgAAAGGttGGGggcgtacacattagataaacgtatgaagtacgttagactcggcgccgccg")
+b <- toupper("acccctattttttgagcagatttagtgacctggaaaaaaaatttgagtacaaaacttttccgaatacAAtAAAAcGGcGGGa")
+c <- toupper("tgagtatccctgggatgacttAAAAtAAtGGaGtGGtgctctcccgatttttgaatatgtaggatcattcgccagggtccga")
+d <- toupper("gctgagaattggatgcAAAAAAAGGGattGtccacgcaatcgcgaaccaacgcggacccaaaggcaagaccgataaaggaga")
+e <- toupper("tcccttttgcggtaatgtgccgggaggctggttacgtagggaagccctaacggacttaatAtAAtAAAGGaaGGGcttatag")
+f <- toupper("gtcaatcatgttcttgtgaatggatttAAcAAtAAGGGctGGgaccgcttggcgcacccaaattcagtgtgggcgagcgcaa")
+g <- toupper("cggttttggcccttgttagaggcccccgtAtAAAcAAGGaGGGCcaattatgagagagctaatctatcgcgtgcgtgttcat")
+l <- toupper("aacttgagttAAAAAAtAGGGaGccctggggcacatacaagaggagtcttccttatcagttaatgctgtatgacactatgta")
+m <- toupper("ttggcccattggctaaaagcccaacttgacaaatggaagatagaatccttgcatAcTAAAAAGGaGcGGaccgaaagggaag")
+n <- toupper("ctggtgagcaacgacagattcttacgtgcattagctcgcttccggggatctaatagcacgaagcttActAAAAAGGaGcGGa")
+topProfileScores <- 1000
+UltraMotifs <- NULL
+gibbsample <- 0
+while (gibbsample < 100) {
+gibbsample <- gibbsample + 1
+dna <- data.frame(a,b,c,d,e,f,g,l,m,n, stringsAsFactors = FALSE)
+dna <- unname(dna)
+motifs <- NULL
+motifs <- data.frame(NULL, stringsAsFactors = FALSE)
+i <- 1
+while (i < 11) {
+start <- sample (1:(nchar(a)-k), 1, replace = TRUE);
+end <- start + k
+currString <- as.character(dna[i])
+tempmotif <- substr(currString, start, end)
+tempmotif2 <- data.frame(tempmotif, stringsAsFactors = FALSE)
+motifs <- rbind(motifs, tempmotif2)
+i <- i+1
+}
+bestmotifs <- motifs
+
+
+repetes <- 0
+while (repetes < 200) {
+  repetes <- repetes + 1
+  motifsMatrix <- bestmotifs
+  deleteMotif <- sample(1:5, 1, replace = TRUE)
+  motifsMatrix <- motifsMatrix[-c(deleteMotif), ]
+  motifsMatrix <- data.frame(motifsMatrix, stringsAsFactors = FALSE)
+  check <- 0
+  j <- 0
+  profile <- data.frame(NULL, stringsAsFactors = FALSE)
+  while (j < k+1) {
+    gCount <- 0
+    aCount <- 0
+    tCount <- 0
+    cCount <- 0
+    j <- j+1
+    h <- 0
+    while (h < 10) {
+      h <- h+1
+      countMotif <- motifsMatrix[h, ]
+      stringMotif <- as.character(countMotif)
+      Nucleotide <- substr(stringMotif, j, j)
+      if (identical(Nucleotide,"A") == TRUE) {
+        aCount <- aCount + 1
+      }
+      if (identical(Nucleotide,"C") == TRUE) {
+        cCount <- cCount + 1
+      }
+      if (identical(Nucleotide,"G") == TRUE) {
+        gCount <- gCount + 1
+      }
+      if (identical(Nucleotide,"T") == TRUE) {
+        tCount <- tCount + 1
+      }
+    }
+    
+    row <- c(aCount, gCount, tCount, cCount)
+    row <- data.frame(row, stringsAsFactors = FALSE)
+    row <- unname(row)
+    if (check == 1) {
+      profile <- cbind(profile, row)
+    row <- NULL
+  }
+    if (check == 0) {
+      profile <- rbind(profile, row)
+      check <- 1
+      row <- NULL
+    }
+    
+  }
+profile <- profile + 1
+count <- 0
+probProfile <- data.frame(NULL, stringsAsFactors = FALSE)
+check <- 0
+while (count < ncol(profile)) {
+  count <- count + 1
+  tempcol <- profile[ ,count]
+  sum <-sum(tempcol)
+  tempcol[1]=tempcol[1]/sum
+  tempcol[2]=tempcol[2]/sum
+  tempcol[3]=tempcol[3]/sum
+  tempcol[4]=tempcol[4]/sum
+  if (check == 1) {
+    probProfile <- cbind(probProfile, tempcol)
+  }
+  if (check == 0) {
+    probProfile <- rbind(probProfile, tempcol)
+  }
+}
+probProfile <- t(probProfile)
+i <- 0
+if (deleteMotif == 1) {
+  deletedna <- a
+}
+if (deleteMotif == 2) {
+  deletedna <- b
+}
+if (deleteMotif == 3) {
+  deletedna <- c
+}
+if (deleteMotif == 4) {
+  deletedna <- d
+}
+if (deleteMotif == 5) {
+  deletedna <- e
+}
+if (deleteMotif == 6) {
+  deletedna <- f
+}
+if (deleteMotif == 7) {
+  deletedna <- g
+}
+if (deleteMotif == 8) {
+  deletedna <- l
+}
+if (deleteMotif == 9) {
+  deletedna <- m
+}
+if (deleteMotif == 10) {
+  deletedna <- n
+}
+ratings <- NULL
+check <- 0
+while (i < nchar(a)-k) {
+  i <- i+1
+  tempsubstr <- substr(deletedna, i, i+k)
+  j <- 0
+  substrProb <- NULL
+  while (j < k + 1) {
+    j <- j+1
+    BasePair <- substr(tempsubstr, j, j)
+    if (identical(BasePair, "A") == TRUE ) {
+      substrProb <- c(substrProb, probProfile[1, j])
+    }
+    if (identical(BasePair, "G") == TRUE ) {
+      substrProb <- c(substrProb, probProfile[2, j])
+    }
+    if (identical(BasePair, "T") == TRUE ) {
+      substrProb <- c(substrProb, probProfile[3, j])
+    }
+    if (identical(BasePair, "C") == TRUE ) {
+      substrProb <- c(substrProb, probProfile[4, j])
+    }
+  }
+  substrProb <- prod(substrProb)
+  ratings <- c(ratings, substrProb)
+}
+ratings <- ratings/sum(ratings)
+new <- sample(1:(nchar(a)-k), 1, replace = TRUE, prob = ratings)
+bestmotifs[deleteMotif, ] <- substr(deletedna, new, new + k)
+}
+
+motifsMatrix <- bestmotifs
+check <- 0
+j <- 0
+profile <- data.frame(NULL, stringsAsFactors = FALSE)
+while (j < k+1) {
+  gCount <- 0
+  aCount <- 0
+  tCount <- 0
+  cCount <- 0
+  j <- j+1
+  h <- 0
+  while (h < 10) {
+    h <- h+1
+    countMotif <- motifsMatrix[h, ]
+    stringMotif <- as.character(countMotif)
+    Nucleotide <- substr(stringMotif, j, j)
+    if (identical(Nucleotide,"A") == TRUE) {
+      aCount <- aCount + 1
+    }
+    if (identical(Nucleotide,"C") == TRUE) {
+      cCount <- cCount + 1
+    }
+    if (identical(Nucleotide,"G") == TRUE) {
+      gCount <- gCount + 1
+    }
+    if (identical(Nucleotide,"T") == TRUE) {
+      tCount <- tCount + 1
+    }
+  }
+  row <- c(aCount, gCount, tCount, cCount)
+  row <- data.frame(row, stringsAsFactors = FALSE)
+  row <- unname(row)
+  if (check == 1) {
+    profile <- cbind(profile, row)
+    row <- NULL
+  }
+  if (check == 0) {
+    profile <- rbind(profile, row)
+    check <- 1
+    row <- NULL
+  }
+  
+}
+score <- 0
+i <- 0
+while (i < k+1) {
+  i <- i+1
+  score <- score + 10-max(profile[ ,i])
+}
+if (score < topProfileScores) {
+  topProfileScores <- score
+  UltraMotifs <- profile
+}
+}
+UltraMotifs
+topProfileScores
